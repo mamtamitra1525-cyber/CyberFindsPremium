@@ -1,120 +1,76 @@
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Open Sans',
-    'Helvetica Neue',
-    sans-serif;
+/* Global Reset & Base Styles */
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
-h1,
-h2,
-p {
-  margin: 0;
-  padding: 0;
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a0f;
+  color: #ffffff;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 2rem;
-  margin-top: 2rem;
-}
-
-h2 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 1rem;
-}
-
-h4 {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-h5 {
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
-}
-
-p {
-  font-size: 1rem;
-  line-height: 1.4;
-}
-
-a {
-  color: #000;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-hr {
-  border-bottom: none;
-  border-top: 1px solid #000;
+  font-size: clamp(2rem, 5vw, 4.5rem);
   margin: 0;
 }
 
-pre {
-  white-space: pre-wrap;
+h2 {
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  margin: 0;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+h3 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  margin: 0;
 }
 
-body > main {
-  margin: 0 1rem 1rem 1rem;
+h4 {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
 }
 
-section {
-  padding: 1rem 0;
-  @media (min-width: 768px) {
-    padding: 2rem 0;
-  }
+h5 {
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+  margin: 0;
 }
 
-fieldset {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0.5rem;
-  padding: 1rem;
+p {
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
+  line-height: 1.7;
+  margin: 0;
 }
 
-form {
-  max-width: 100%;
-  @media (min-width: 768px) {
-    max-width: 400px;
-  }
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: all 200ms ease;
 }
 
-input {
-  border-radius: 4px;
-  border: 1px solid #000;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-  margin-top: 0.25rem;
-  padding: 0.5rem;
+a:hover {
+  cursor: pointer;
 }
 
-legend {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
 }
 
 ul {
@@ -123,17 +79,40 @@ ul {
   padding: 0;
 }
 
-li {
-  margin-bottom: 0.5rem;
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-dl {
-  margin: 0.5rem 0;
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
 }
 
-code {
-  background: #ddd;
-  border-radius: 4px;
-  font-family: monospace;
-  padding: 0.25rem;
+/* Body Structure */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body > main {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

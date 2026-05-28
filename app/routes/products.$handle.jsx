@@ -1,4 +1,4 @@
-import {useLoaderData} from 'react-router';
+import { useLoaderData } from 'react-router';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -6,148 +6,258 @@ import {
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
+  Money,
+  Image,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import { motion } from 'framer-motion';
+import { redirectIfHandleIsLocalized } from '~/lib/redirect';
+import { AddToCartButton } from '~/components/AddToCartButton';
 
-/**
- * @type {Route.MetaFunction}
- */
-export const meta = ({data}) => {
+export const meta = ({ data }) => {
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    { title: `CyberFinds | ${data?.product?.title ?? 'Product'}` },
     {
       rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
+      href: `/products/${data?.product?.handle}`,
     },
   ];
 };
 
-/**
- * @param {Route.LoaderArgs} args
- */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return { ...deferredData, ...criticalData };
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- * @param {Route.LoaderArgs}
- */
-async function loadCriticalData({context, params, request}) {
-  const {handle} = params;
-  const {storefront} = context;
+async function loadCriticalData({ context, params, request }) {
+  const { handle } = params;
+  const { storefront } = context;
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
-  const [{product}] = await Promise.all([
+  const [{ product }] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+      variables: { handle, selectedOptions: getSelectedProductOptions(request) },
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!product?.id) {
-    throw new Response(null, {status: 404});
+    throw new Response(null, { status: 404 });
   }
 
-  // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: product});
+  redirectIfHandleIsLocalized(request, { handle, data: product });
 
-  return {
-    product,
-  };
+  return { product };
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- * @param {Route.LoaderArgs}
- */
-function loadDeferredData({context, params}) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
-
+function loadDeferredData({ context, params }) {
   return {};
 }
 
-export default function Product() {
-  /** @type {LoaderReturnData} */
-  const {product} = useLoaderData();
+export default function ProductRoute() {
+  const { product } = useLoaderData();
 
-  // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
-    getAdjacentAndFirstAvailableVariants(product),
+    getAdjacentAndFirstAvailableVariants(product)
   );
 
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  // Get the product options array
   const productOptions = getProductOptions({
     ...product,
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, descriptionHtml} = product;
-
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <div className="min-h-screen pt-[72px]">
+      <div className="max-w-[1600px] mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* Product Image */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="relative"
+          >
+            <div className="sticky top-32">
+              {selectedVariant?.image ? (
+                <div className="relative aspect-square rounded-2xl overflow-hidden glass-card">
+                  <Image
+                    data={selectedVariant.image}
+                    sizes="(min-width: 45em) 50vw, 100vw"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-cyber-dark/30 to-transparent pointer-events-none" />
+                </div>
+              ) : (
+                <div className="aspect-square rounded-2xl glass-card flex items-center justify-center">
+                  <p className="text-white/40">No image available</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Product Details */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col"
+          >
+            {/* Title & Price */}
+            <div className="mb-8">
+              <span className="text-cyber-accent text-sm font-mono tracking-wider">
+                PREMIUM QUALITY
+              </span>
+              <h1 className="text-3xl md:text-5xl font-bold text-white mt-2 mb-6">
+                {product.title}
+              </h1>
+
+              <div className="flex items-baseline gap-3 mb-4">
+                {selectedVariant?.price && (
+                  <Money
+                    data={selectedVariant.price}
+                    className="text-3xl font-bold gradient-text"
+                  />
+                )}
+                {selectedVariant?.compareAtPrice && (
+                  <Money
+                    data={selectedVariant.compareAtPrice}
+                    className="text-xl text-white/40 line-through"
+                  />
+                )}
+              </div>
+
+              {product.vendor && (
+                <p className="text-white/60 text-sm">By {product.vendor}</p>
+              )}
+            </div>
+
+            {/* Product Options */}
+            {productOptions.length > 0 && (
+              <div className="mb-8">
+                {productOptions.map((option) => {
+                  if (option.optionValues.length === 0) return null;
+
+                  return (
+                    <div key={option.name} className="mb-6">
+                      <h3 className="text-sm font-semibold text-white mb-3">
+                        {option.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-3">
+                        {option.optionValues.map((value) => {
+                          const isSelected = value.selected;
+                          const isAvailable = value.available;
+
+                          return (
+                            <button
+                              key={value.name}
+                              type="button"
+                              disabled={!isAvailable}
+                              className={`
+                                px-4 py-2 rounded-lg border text-sm font-medium transition-all
+                                ${isSelected
+                                  ? 'bg-cyber-accent text-black border-cyber-accent'
+                                  : isAvailable
+                                    ? 'bg-transparent text-white border-white/20 hover:border-cyber-accent hover:text-cyber-accent'
+                                    : 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed'}
+                              `}
+                            >
+                              {value.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add to Cart */}
+            <div className="mb-8">
+              <AddToCartButton
+                disabled={!selectedVariant || !selectedVariant.availableForSale}
+                lines={[{
+                  merchandiseId: selectedVariant?.id,
+                  quantity: 1,
+                }]}
+                className="w-full py-4 bg-gradient-to-r from-cyber-accent to-cyber-purple text-black font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  {!selectedVariant?.availableForSale ? 'Sold Out' : 'Add to Cart'}
+                </span>
+              </AddToCartButton>
+
+              {!selectedVariant?.availableForSale && (
+                <p className="text-center text-white/60 text-sm mt-3">
+                  This variant is currently out of stock
+                </p>
+              )}
+            </div>
+
+            {/* Description */}
+            {product.descriptionHtml && (
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-white mb-3">
+                  Description
+                </h3>
+                <div
+                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+                  className="prose prose-invert prose-sm max-w-none text-white/70"
+                />
+              </div>
+            )}
+
+            {/* Features */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: '🚀', label: 'Fast Shipping', value: '3-5 Days' },
+                { icon: '🛡️', label: 'Secure Payment', value: '256-bit SSL' },
+                { icon: '↩️', label: 'Easy Returns', value: '30 Days' },
+                { icon: '💎', label: 'Premium Quality', value: 'Guaranteed' },
+              ].map((feature, index) => (
+                <div key={index} className="glass-card p-4 rounded-lg">
+                  <div className="text-2xl mb-1">{feature.icon}</div>
+                  <p className="text-xs text-white/60">{feature.label}</p>
+                  <p className="text-sm font-semibold text-white">{feature.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Analytics */}
+            <Analytics.ProductView
+              data={{
+                products: [
+                  {
+                    id: product.id,
+                    title: product.title,
+                    price: selectedVariant?.price?.amount || '0',
+                    vendor: product.vendor,
+                    variantId: selectedVariant?.id || '',
+                    variantTitle: selectedVariant?.title || '',
+                    quantity: 1,
+                  },
+                ],
+              }}
+            />
+          </motion.div>
+        </div>
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
     </div>
   );
 }
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
+const PRODUCT_QUERY = `#graphql
   fragment ProductVariant on ProductVariant {
     availableForSale
     compareAtPrice {
@@ -156,7 +266,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     }
     id
     image {
-      __typename
       id
       url
       altText
@@ -175,16 +284,9 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       name
       value
     }
-    sku
     title
-    unitPrice {
-      amount
-      currencyCode
-    }
   }
-`;
 
-const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
     title
@@ -214,7 +316,7 @@ const PRODUCT_FRAGMENT = `#graphql
     selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
       ...ProductVariant
     }
-    adjacentVariants (selectedOptions: $selectedOptions) {
+    adjacentVariants(selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
     seo {
@@ -222,10 +324,7 @@ const PRODUCT_FRAGMENT = `#graphql
       title
     }
   }
-  ${PRODUCT_VARIANT_FRAGMENT}
-`;
 
-const PRODUCT_QUERY = `#graphql
   query Product(
     $country: CountryCode
     $handle: String!
@@ -236,8 +335,4 @@ const PRODUCT_QUERY = `#graphql
       ...Product
     }
   }
-  ${PRODUCT_FRAGMENT}
 `;
-
-/** @typedef {import('./+types/products.$handle').Route} Route */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
